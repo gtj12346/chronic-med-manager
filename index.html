@@ -7,23 +7,25 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --primary: #6C5CE7;
-  --primary-light: #A29BFE;
-  --primary-bg: #F8F7FF;
-  --success: #00B894;
-  --success-bg: #E8FFF8;
-  --warning: #FDCB6E;
-  --warning-bg: #FFF8E8;
-  --danger: #E17055;
-  --danger-bg: #FFF0EC;
-  --text: #2D3436;
-  --text-secondary: #636E72;
-  --text-light: #B2BEC3;
-  --bg: #F0F2F5;
-  --card: #FFF;
-  --border: #E8ECF0;
-  --radius: 16px;
-  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --primary: #0058A3;
+  --primary-light: #4A8BC2;
+  --primary-bg: #EDF4F9;
+  --success: #28A745;
+  --success-bg: #EAF7ED;
+  --warning: #FFDA1A;
+  --warning-bg: #FFF9E0;
+  --danger: #CC0008;
+  --danger-bg: #FFEAEB;
+  --text: #111;
+  --text-secondary: #555;
+  --text-light: #999;
+  --bg: #F5F0EB;
+  --card: #FFFFFF;
+  --border: #E0DBD5;
+  --radius: 12px;
+  --shadow: 0 1px 6px rgba(0,0,0,0.06);
+  --accent: #FFDA1A;
+  --accent-bg: #FFFAE6;
 }
 body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 80px; -webkit-font-smoothing: antialiased; }
 
@@ -31,8 +33,8 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 .onboarding { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999; background: #fff; overflow-y: auto; }
 .onboarding.hidden { display: none; }
 .ob-slide { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; }
-.ob-slide.s1 { background: linear-gradient(160deg, #6C5CE7 0%, #A29BFE 50%, #DFE6E9 100%); color: #fff; }
-.ob-slide.s2 { background: #F8F7FF; }
+.ob-slide.s1 { background: linear-gradient(160deg, #0058A3 0%, #0077C2 40%, #FFDA1A 100%); color: #fff; }
+.ob-slide.s2 { background: #F5F0EB; }
 .ob-slide.s3 { background: #fff; }
 
 .ob-hero-icon { font-size: 80px; margin-bottom: 24px; animation: float 3s ease-in-out infinite; }
@@ -41,7 +43,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 .ob-subtitle { font-size: 16px; opacity: 0.9; line-height: 1.6; max-width: 320px; }
 
 .ob-pain-points { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 380px; margin: 32px 0; }
-.ob-pain { display: flex; align-items: flex-start; gap: 14px; background: #fff; padding: 18px 16px; border-radius: 14px; text-align: left; box-shadow: 0 2px 12px rgba(108,92,231,0.08); }
+.ob-pain { display: flex; align-items: flex-start; gap: 14px; background: #fff; padding: 18px 16px; border-radius: 14px; text-align: left; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .ob-pain .pain-icon { font-size: 28px; flex-shrink: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
 .ob-pain .pain-icon.red { background: var(--danger-bg); }
 .ob-pain .pain-icon.orange { background: var(--warning-bg); }
@@ -52,22 +54,22 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 
 .ob-solution { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 380px; margin: 24px 0; }
 .ob-sol-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px; background: var(--primary-bg); text-align: left; }
-.ob-sol-item .sol-step { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.ob-sol-item .sol-step { width: 32px; height: 32px; border-radius: 50%; background: #FFDA1A; color: #333; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
 .ob-sol-item .sol-text { font-size: 14px; font-weight: 500; }
 .ob-sol-item .sol-desc { font-size: 12px; color: var(--text-secondary); }
 
 .ob-journey { width: 100%; max-width: 380px; margin: 24px 0; }
 .journey-flow { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; margin: 16px 0; }
 .journey-node { padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #fff; }
-.journey-node.n1 { background: #74B9FF; }
-.journey-node.n2 { background: #A29BFE; }
-.journey-node.n3 { background: #6C5CE7; }
-.journey-node.n4 { background: #00B894; }
+.journey-node.n1 { background: #4A8BC2; }
+.journey-node.n2 { background: #0072BB; }
+.journey-node.n3 { background: #0058A3; }
+.journey-node.n4 { background: #FFDA1A; color: #333; }
 .journey-arrow { font-size: 18px; color: var(--text-light); }
 .journey-label { font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 8px; line-height: 1.6; }
 
 .ob-btn { padding: 14px 48px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: all .2s; }
-.ob-btn.primary { background: var(--primary); color: #fff; box-shadow: 0 4px 16px rgba(108,92,231,0.3); }
+.ob-btn.primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(0,88,163,0.3); }
 .ob-btn.primary:active { transform: scale(0.97); }
 .ob-btn.outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
 .ob-btn.white { background: #fff; color: var(--primary); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
@@ -82,7 +84,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 .ob-section-sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
 
 /* ========== HEADER ========== */
-.header { background: linear-gradient(135deg, #6C5CE7, #A29BFE); color: #fff; padding: 20px 16px 18px; position: sticky; top: 0; z-index: 100; }
+.header { background: linear-gradient(135deg, #0058A3, #0072BB); color: #fff; padding: 20px 16px 18px; position: sticky; top: 0; z-index: 100; }
 .header-top { display: flex; justify-content: space-between; align-items: center; }
 .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
 .header .header-actions { display: flex; gap: 8px; }
@@ -207,7 +209,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 
 /* ========== AI ASSISTANT ========== */
 .ai-assistant { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-.ai-header { background: linear-gradient(135deg, #6C5CE7, #A29BFE); padding: 14px 16px; color: #fff; display: flex; align-items: center; gap: 10px; }
+.ai-header { background: linear-gradient(135deg, #0058A3, #0072BB); padding: 14px 16px; color: #fff; display: flex; align-items: center; gap: 10px; }
 .ai-header .ai-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 18px; }
 .ai-header .ai-name { font-size: 14px; font-weight: 600; }
 .ai-header .ai-status { font-size: 11px; opacity: 0.8; }
@@ -247,9 +249,9 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 .fm-action button { padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font-size: 12px; cursor: pointer; color: var(--primary); }
 
 /* ========== HEALTH TIPS ========== */
-.tip-card { background: linear-gradient(135deg, #F8F7FF, #E8E4FF); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
-.tip-card .tip-title { font-size: 14px; font-weight: 600; color: #5B4BC4; }
-.tip-card .tip-content { font-size: 13px; color: #6B5DC6; margin-top: 6px; line-height: 1.7; }
+.tip-card { background: linear-gradient(135deg, #FFFAE6, #FFF3BF); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; }
+.tip-card .tip-title { font-size: 14px; font-weight: 600; color: #5A4B00; }
+.tip-card .tip-content { font-size: 13px; color: #6B5D1A; margin-top: 6px; line-height: 1.7; }
 
 /* ========== BOTTOM NAV ========== */
 .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
@@ -297,7 +299,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 .empty-state .empty-btn { display: inline-block; margin-top: 14px; padding: 10px 24px; background: var(--primary); color: #fff; border-radius: 10px; font-size: 13px; cursor: pointer; border: none; font-weight: 500; }
 
 /* ========== FAB ========== */
-.fab { position: fixed; bottom: 82px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 4px 16px rgba(108,92,231,0.4); z-index: 99; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+.fab { position: fixed; bottom: 82px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,88,163,0.35); z-index: 99; display: flex; align-items: center; justify-content: center; transition: all .2s; }
 .fab:active { transform: scale(0.9) rotate(90deg); }
 
 /* ========== TAG ========== */
@@ -306,7 +308,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
 .tag-green { background: var(--success-bg); color: var(--success); }
 .tag-red { background: var(--danger-bg); color: var(--danger); }
 .tag-orange { background: var(--warning-bg); color: #E67E22; }
-.tag-purple { background: var(--primary-bg); color: var(--primary); }
+.tag-purple { background: var(--accent-bg); color: #5A4B00; }
 
 /* ========== LOG ========== */
 .log-item { background: var(--card); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; box-shadow: var(--shadow); }
@@ -526,7 +528,7 @@ body { font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', sans-serif; 
       <div class="adherence-ring">
         <svg width="100" height="100" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="42" stroke="#EEE" stroke-width="9" fill="none"/>
-          <circle cx="50" cy="50" r="42" stroke="#6C5CE7" stroke-width="9" fill="none"
+          <circle cx="50" cy="50" r="42" stroke="#0058A3" stroke-width="9" fill="none"
             id="adherenceCircle" stroke-dasharray="263.9" stroke-dashoffset="263.9" stroke-linecap="round"/>
         </svg>
         <div class="ring-text">
