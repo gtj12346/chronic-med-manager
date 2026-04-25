@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>慢病用药小管家</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --primary: #4A90D9;
+  --primary-light: #EBF3FC;
+  --primary-dark: #3A7BC8;
+  --success: #52C41A;
+  --warning: #FAAD14;
+  --danger: #FF4D4F;
+  --text: #333;
+  --text-secondary: #888;
+  --bg: #F5F7FA;
+  --card: #FFF;
+  --border: #E8E8E8;
+  --radius: 12px;
+}
+body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 80px; }
+
+/* Header */
+.header { background: linear-gradient(135deg, #4A90D9, #357ABD); color: #fff; padding: 20px 16px 16px; position: sticky; top: 0; z-index: 100; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+.header .user-info { display: flex; align-items: center; gap: 10px; margin-top: 12px; background: rgba(255,255,255,0.15); border-radius: 10px; padding: 10px 14px; }
+.header .avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.header .user-detail { flex: 1; }
+.header .user-name { font-size: 15px; font-weight: 500; }
+.header .user-diseases { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+.header .edit-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+/* Stats Cards */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; margin-top: -8px; }
+.stat-card { background: var(--card); border-radius: var(--radius); padding: 14px 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stat-card .num { font-size: 24px; font-weight: 700; color: var(--primary); }
+.stat-card .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.stat-card.warn .num { color: var(--warning); }
+.stat-card.danger .num { color: var(--danger); }
+
+/* Section */
+.section { padding: 0 16px; margin-bottom: 16px; }
+.section-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.section-title .more { font-size: 13px; color: var(--primary); font-weight: 400; cursor: pointer; }
+
+/* Today's Medication */
+.med-timeline { background: var(--card); border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.time-slot { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.time-slot:last-child { border-bottom: none; }
+.time-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.time-icon.morning { background: #FFF7E6; }
+.time-icon.noon { background: #E6F7FF; }
+.time-icon.evening { background: #F0E6FF; }
+.time-icon.night { background: #E6FFE6; }
+.time-detail { flex: 1; }
+.time-label { font-size: 14px; font-weight: 500; }
+.time-meds { font-size: 12px; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
+.time-action { flex-shrink: 0; }
+.check-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--border); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all .2s; }
+.check-btn.done { background: var(--success); border-color: var(--success); color: #fff; }
+.check-btn.missed { background: var(--danger); border-color: var(--danger); color: #fff; }
+
+/* Medication List */
+.med-card { background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 12px; }
+.med-pill { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.med-info { flex: 1; }
+.med-name { font-size: 15px; font-weight: 500; }
+.med-dosage { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.med-remain { text-align: right; flex-shrink: 0; }
+.med-remain .days { font-size: 18px; font-weight: 600; }
+.med-remain .days.low { color: var(--danger); }
+.med-remain .days.mid { color: var(--warning); }
+.med-remain .days.ok { color: var(--success); }
+.med-remain .unit { font-size: 11px; color: var(--text-secondary); }
+
+/* Reminder Cards */
+.reminder-card { background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid var(--primary); }
+.reminder-card.urgent { border-left-color: var(--danger); }
+.reminder-card .r-title { font-size: 14px; font-weight: 500; }
+.reminder-card .r-time { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.reminder-card .r-desc { font-size: 13px; color: #666; margin-top: 6px; line-height: 1.5; }
+
+/* Calendar Heatmap */
+.calendar-wrap { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.calendar-header .month { font-size: 15px; font-weight: 500; }
+.calendar-nav { display: flex; gap: 8px; }
+.calendar-nav button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: 14px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+.calendar-grid .day-label { font-size: 11px; color: var(--text-secondary); padding: 4px 0; }
+.calendar-grid .day { width: 100%; aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; position: relative; }
+.calendar-grid .day.today { font-weight: 700; box-shadow: inset 0 0 0 2px var(--primary); }
+.calendar-grid .day.empty { visibility: hidden; }
+.calendar-grid .day.full { background: #D4EDDA; color: #155724; }
+.calendar-grid .day.partial { background: #FFF3CD; color: #856404; }
+.calendar-grid .day.missed { background: #F8D7DA; color: #721C24; }
+.calendar-grid .day.future { color: #CCC; }
+.calendar-legend { display: flex; gap: 16px; margin-top: 12px; justify-content: center; }
+.calendar-legend span { font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+.calendar-legend span::before { content: ''; width: 12px; height: 12px; border-radius: 3px; }
+.calendar-legend .l-full::before { background: #D4EDDA; }
+.calendar-legend .l-partial::before { background: #FFF3CD; }
+.calendar-legend .l-missed::before { background: #F8D7DA; }
+
+/* Bottom Nav */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0 6px; cursor: pointer; color: var(--text-secondary); transition: color .2s; font-size: 20px; }
+.nav-item.active { color: var(--primary); }
+.nav-item .nav-label { font-size: 10px; margin-top: 2px; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: #fff; border-radius: 16px 16px 0 0; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 20px 16px 32px; }
+.modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.modal-title .close-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg); cursor: pointer; font-size: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; }
+.form-group input:focus, .form-group select:focus { border-color: var(--primary); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.checkbox-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.checkbox-group label { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text); background: var(--bg); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+.checkbox-group input { accent-color: var(--primary); }
+.submit-btn { width: 100%; padding: 12px; border: none; border-radius: 10px; background: var(--primary); color: #fff; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 8px; }
+.submit-btn:active { background: var(--primary-dark); }
+.delete-btn { width: 100%; padding: 12px; border: 1px solid var(--danger); border-radius: 10px; background: #fff; color: var(--danger); font-size: 14px; cursor: pointer; margin-top: 8px; }
+
+/* Page containers */
+.page { display: none; }
+.page.active { display: block; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state .empty-text { font-size: 14px; }
+.empty-state .empty-btn { display: inline-block; margin-top: 12px; padding: 8px 20px; background: var(--primary); color: #fff; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; }
+
+/* Adherence Rate */
+.adherence-ring { width: 120px; height: 120px; margin: 0 auto 12px; position: relative; }
+.adherence-ring svg { transform: rotate(-90deg); }
+.adherence-ring .ring-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+.adherence-ring .ring-num { font-size: 28px; font-weight: 700; color: var(--primary); }
+.adherence-ring .ring-label { font-size: 11px; color: var(--text-secondary); }
+
+/* Health Tips */
+.tip-card { background: linear-gradient(135deg, #E6F7FF, #BAE7FF); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+.tip-card .tip-title { font-size: 14px; font-weight: 500; color: #0050B3; }
+.tip-card .tip-content { font-size: 13px; color: #003A8C; margin-top: 6px; line-height: 1.6; }
+
+/* Profile Page */
+.profile-item { background: var(--card); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); cursor: pointer; }
+.profile-item:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+.profile-item:last-child { border-radius: 0 0 var(--radius) var(--radius); border-bottom: none; }
+.profile-item .p-label { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.profile-item .p-value { font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; }
+
+/* Fab button */
+.fab { position: fixed; bottom: 80px; right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(74,144,217,0.4); z-index: 99; display: flex; align-items: center; justify-content: center; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 0; }
+
+/* Animation */
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-overlay.show .modal { animation: slideUp .3s ease; }
+
+/* Tag */
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.tag-blue { background: #E6F7FF; color: #1890FF; }
+.tag-green { background: #F6FFED; color: #52C41A; }
+.tag-red { background: #FFF1F0; color: #FF4D4F; }
+.tag-orange { background: #FFF7E6; color: #FA8C16; }
+
+/* Interaction Log */
+.log-item { background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.log-item .log-date { font-size: 12px; color: var(--text-secondary); }
+.log-item .log-title { font-size: 14px; font-weight: 500; margin-top: 4px; }
+.log-item .log-detail { font-size: 13px; color: #666; margin-top: 4px; line-height: 1.5; }
+
+@media(min-width:500px) {
+  body { max-width: 500px; margin: 0 auto; }
+  .bottom-nav { max-width: 500px; left: 50%; transform: translateX(-50%); }
+  .fab { right: calc(50% - 234px); }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<div class="header" id="appHeader">
+  <h1>💊 慢病用药小管家</h1>
+  <div class="subtitle">科学管理，健康每一天</div>
+  <div class="user-info" onclick="showProfileModal()">
+    <div class="avatar">👤</div>
+    <div class="user-detail">
+      <div class="user-name" id="headerName">点击设置个人信息</div>
+      <div class="user-diseases" id="headerDiseases"></div>
+    </div>
+    <button class="edit-btn">编辑</button>
+  </div>
+</div>
+
+<!-- ========== PAGE: HOME ========== -->
+<div class="page active" id="page-home">
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="statMeds">0</div><div class="label">在用药品</div></div>
+    <div class="stat-card warn"><div class="num" id="statToday">0/0</div><div class="label">今日已服</div></div>
+    <div class="stat-card"><div class="num" id="statAdherence">--%</div><div class="label">本周依从率</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📅 今日用药计划</div>
+    <div class="med-timeline" id="todayTimeline">
+      <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无用药计划<br>点击右下角 + 添加药品</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔔 近期提醒</div>
+    <div id="remindersHome"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">💡 健康贴士</div>
+    <div id="healthTips"></div>
+  </div>
+</div>
+
+<!-- ========== PAGE: MEDS ========== -->
+<div class="page" id="page-meds">
+  <div class="section" style="padding-top:16px">
+    <div class="section-title">💊 我的药品 <span class="more" onclick="showAddMedModal()">+ 添加药品</span></div>
+    <div id="medsList"></div>
+  </div>
+</div>
+
+<!-- ========== PAGE: CALENDAR ========== -->
+<div class="page" id="page-calendar">
+  <div class="section" style="padding-top:16px">
+    <div class="section-title">📊 用药日历</div>
+    <div class="calendar-wrap">
+      <div class="calendar-header">
+        <button class="calendar-nav" style="border:none;background:none"><button onclick="changeMonth(-1)">◀</button></div>
+        <div class="month" id="calendarMonth"></div>
+        <div class="calendar-nav"><button onclick="changeMonth(1)">▶</button></div>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+      <div class="calendar-legend">
+        <span class="l-full">全部完成</span>
+        <span class="l-partial">部分完成</span>
+        <span class="l-missed">未服药</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📈 依从率趋势</div>
+    <div class="calendar-wrap" style="text-align:center">
+      <div class="adherence-ring">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="52" stroke="#E8E8E8" stroke-width="10" fill="none"/>
+          <circle cx="60" cy="60" r="52" stroke="#4A90D9" stroke-width="10" fill="none"
+            id="adherenceCircle" stroke-dasharray="326.7" stroke-dashoffset="326.7" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-text">
+          <div class="ring-num" id="adherenceNum">0%</div>
+          <div class="ring-label">本月依从率</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#888;margin-top:8px" id="adherenceMsg">坚持服药，健康常在</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">📝 用药记录</div>
+    <div id="logList"></div>
+  </div>
+</div>
+
+<!-- ========== PAGE: PROFILE ========== -->
+<div class="page" id="page-profile">
+  <div class="section" style="padding-top:16px">
+    <div class="section-title">👤 个人中心</div>
+    <div>
+      <div class="profile-item" onclick="showProfileModal()">
+        <span class="p-label">📝 个人信息</span><span class="p-value">编辑 ›</span>
+      </div>
+      <div class="profile-item" onclick="showReminderSettings()">
+        <span class="p-label">🔔 复诊提醒</span><span class="p-value" id="reminderCount">0个提醒 ›</span>
+      </div>
+      <div class="profile-item" onclick="exportData()">
+        <span class="p-label">📤 导出用药报告</span><span class="p-value">›</span>
+      </div>
+      <div class="profile-item" onclick="showDrugInteraction()">
+        <span class="p-label">⚠️ 用药冲突检测</span><span class="p-value">›</span>
+      </div>
+      <div class="profile-item" onclick="clearAllData()">
+        <span class="p-label">🗑️ 清除所有数据</span><span class="p-value">›</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:16px">
+    <div class="section-title">🏥 复诊提醒</div>
+    <div id="followupList"></div>
+    <button class="submit-btn" style="margin-top:10px" onclick="showFollowupModal()">+ 添加复诊提醒</button>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="showAddMedModal()">+</button>
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchPage('home')"><span>🏠</span><span class="nav-label">首页</span></div>
+  <div class="nav-item" onclick="switchPage('meds')"><span>💊</span><span class="nav-label">药品</span></div>
+  <div class="nav-item" onclick="switchPage('calendar')"><span>📊</span><span class="nav-label">记录</span></div>
+  <div class="nav-item" onclick="switchPage('profile')"><span>👤</span><span class="nav-label">我的</span></div>
+</div>
+
+<!-- ========== MODALS ========== -->
+<!-- Add/Edit Med Modal -->
+<div class="modal-overlay" id="medModal">
+  <div class="modal">
+    <div class="modal-title"><span id="medModalTitle">添加药品</span><button class="close-btn" onclick="closeModal('medModal')">✕</button></div>
+    <input type="hidden" id="medEditId">
+    <div class="form-group"><label>药品名称</label><input id="medName" placeholder="如：二甲双胍缓释片"></div>
+    <div class="form-row">
+      <div class="form-group"><label>规格</label><input id="medSpec" placeholder="如：500mg"></div>
+      <div class="form-group"><label>每次用量</label><input id="medDose" placeholder="如：1片"></div>
+    </div>
+    <div class="form-group"><label>服药时间</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" value="morning" class="med-time-cb"> 早晨</label>
+        <label><input type="checkbox" value="noon" class="med-time-cb"> 中午</label>
+        <label><input type="checkbox" value="evening" class="med-time-cb"> 晚上</label>
+        <label><input type="checkbox" value="night" class="med-time-cb"> 睡前</label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>剩余数量</label><input id="medRemain" type="number" placeholder="剩余几片/盒"></div>
+      <div class="form-group"><label>单位</label>
+        <select id="medUnit"><option>片</option><option>粒</option><option>袋</option><option>支</option><option>ml</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>服用方式</label>
+      <select id="medMethod"><option>饭后服用</option><option>饭前服用</option><option>空腹服用</option><option>随餐服用</option><option>不限</option></select>
+    </div>
+    <div class="form-group"><label>备注</label><textarea id="medNote" rows="2" placeholder="如：需要避免与柚子汁同服"></textarea></div>
+    <button class="submit-btn" onclick="saveMed()">保存药品</button>
+    <button class="delete-btn" id="deleteMedBtn" style="display:none" onclick="deleteMed()">删除此药品</button>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-title">个人信息<button class="close-btn" onclick="closeModal('profileModal')">✕</button></div>
+    <div class="form-group"><label>姓名</label><input id="profileName" placeholder="请输入姓名"></div>
+    <div class="form-row">
+      <div class="form-group"><label>年龄</label><input id="profileAge" type="number" placeholder="年龄"></div>
+      <div class="form-group"><label>性别</label>
+        <select id="profileGender"><option>男</option><option>女</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>慢病类型（可多选）</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" value="高血压" class="disease-cb"> 高血压</label>
+        <label><input type="checkbox" value="糖尿病" class="disease-cb"> 糖尿病</label>
+        <label><input type="checkbox" value="高血脂" class="disease-cb"> 高血脂</label>
+        <label><input type="checkbox" value="冠心病" class="disease-cb"> 冠心病</label>
+        <label><input type="checkbox" value="哮喘" class="disease-cb"> 哮喘</label>
+        <label><input type="checkbox" value="痛风" class="disease-cb"> 痛风</label>
+        <label><input type="checkbox" value="其他" class="disease-cb"> 其他</label>
+      </div>
+    </div>
+    <div class="form-group"><label>过敏药物</label><input id="profileAllergy" placeholder="如：青霉素，磺胺类"></div>
+    <button class="submit-btn" onclick="saveProfile()">保存</button>
+  </div>
+</div>
+
+<!-- Followup Modal -->
+<div class="modal-overlay" id="followupModal">
+  <div class="modal">
+    <div class="modal-title">添加复诊提醒<button class="close-btn" onclick="closeModal('followupModal')">✕</button></div>
+    <div class="form-group"><label>科室/医院</label><input id="fuDept" placeholder="如：内分泌科 / XX医院"></div>
+    <div class="form-group"><label>复诊日期</label><input id="fuDate" type="date"></div>
+    <div class="form-group"><label>提醒事项</label><textarea id="fuNote" rows="2" placeholder="如：带上近期血糖记录"></textarea></div>
+    <button class="submit-btn" onclick="saveFollowup()">保存提醒</button>
+  </div>
+</div>
+
+<!-- Drug Interaction Modal -->
+<div class="modal-overlay" id="interactionModal">
+  <div class="modal">
+    <div class="modal-title">用药冲突检测<button class="close-btn" onclick="closeModal('interactionModal')">✕</button></div>
+    <div id="interactionResult" style="padding:10px 0"></div>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-title">用药报告<button class="close-btn" onclick="closeModal('reportModal')">✕</button></div>
+    <div id="reportContent" style="padding:10px 0;font-size:13px;line-height:1.8;white-space:pre-wrap"></div>
+  </div>
+</div>
+
+<script>
+// ===== DATA LAYER =====
+const STORAGE_KEY = 'chronic_med_manager';
+function loadData() {
+  const d = localStorage.getItem(STORAGE_KEY);
+  return d ? JSON.parse(d) : { profile: {}, meds: [], followups: [], logs: [], checkins: {} };
+}
+function saveData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function today() { return new Date().toISOString().slice(0, 10); }
+
+// ===== NAV =====
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach((n, i) => {
+    n.classList.toggle('active', ['home','meds','calendar','profile'][i] === name);
+  });
+  if (name === 'calendar') { renderCalendar(); renderAdherence(); renderLogs(); }
+  if (name === 'meds') renderMedsList();
+  if (name === 'home') renderHome();
+  if (name === 'profile') renderProfile();
+}
+
+// ===== MODAL =====
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+
+// ===== PROFILE =====
+function showProfileModal() {
+  const data = loadData();
+  document.getElementById('profileName').value = data.profile.name || '';
+  document.getElementById('profileAge').value = data.profile.age || '';
+  document.getElementById('profileGender').value = data.profile.gender || '男';
+  document.getElementById('profileAllergy').value = data.profile.allergy || '';
+  document.querySelectorAll('.disease-cb').forEach(cb => {
+    cb.checked = (data.profile.diseases || []).includes(cb.value);
+  });
+  openModal('profileModal');
+}
+function saveProfile() {
+  const data = loadData();
+  data.profile = {
+    name: document.getElementById('profileName').value,
+    age: document.getElementById('profileAge').value,
+    gender: document.getElementById('profileGender').value,
+    allergy: document.getElementById('profileAllergy').value,
+    diseases: [...document.querySelectorAll('.disease-cb:checked')].map(c => c.value)
+  };
+  saveData(data);
+  closeModal('profileModal');
+  renderHeader();
+  renderHome();
+}
+function renderHeader() {
+  const data = loadData();
+  const p = data.profile;
+  document.getElementById('headerName').textContent = p.name ? `${p.name}${p.age ? ' · ' + p.age + '岁' : ''}` : '点击设置个人信息';
+  document.getElementById('headerDiseases').textContent = (p.diseases || []).join(' · ') || '';
+}
+
+// ===== MEDS =====
+function showAddMedModal(id) {
+  const data = loadData();
+  document.getElementById('medEditId').value = '';
+  document.getElementById('medModalTitle').textContent = '添加药品';
+  document.getElementById('deleteMedBtn').style.display = 'none';
+  document.getElementById('medName').value = '';
+  document.getElementById('medSpec').value = '';
+  document.getElementById('medDose').value = '';
+  document.getElementById('medRemain').value = '';
+  document.getElementById('medNote').value = '';
+  document.querySelectorAll('.med-time-cb').forEach(c => c.checked = false);
+  if (id) {
+    const med = data.meds.find(m => m.id === id);
+    if (med) {
+      document.getElementById('medEditId').value = id;
+      document.getElementById('medModalTitle').textContent = '编辑药品';
+      document.getElementById('deleteMedBtn').style.display = 'block';
+      document.getElementById('medName').value = med.name;
+      document.getElementById('medSpec').value = med.spec || '';
+      document.getElementById('medDose').value = med.dose || '';
+      document.getElementById('medRemain').value = med.remain || '';
+      document.getElementById('medUnit').value = med.unit || '片';
+      document.getElementById('medMethod').value = med.method || '饭后服用';
+      document.getElementById('medNote').value = med.note || '';
+      document.querySelectorAll('.med-time-cb').forEach(c => {
+        c.checked = (med.times || []).includes(c.value);
+      });
+    }
+  }
+  openModal('medModal');
+}
+function saveMed() {
+  const data = loadData();
+  const id = document.getElementById('medEditId').value;
+  const med = {
+    id: id || genId(),
+    name: document.getElementById('medName').value,
+    spec: document.getElementById('medSpec').value,
+    dose: document.getElementById('medDose').value,
+    times: [...document.querySelectorAll('.med-time-cb:checked')].map(c => c.value),
+    remain: parseInt(document.getElementById('medRemain').value) || 0,
+    unit: document.getElementById('medUnit').value,
+    method: document.getElementById('medMethod').value,
+    note: document.getElementById('medNote').value
+  };
+  if (!med.name) { alert('请输入药品名称'); return; }
+  if (id) {
+    const idx = data.meds.findIndex(m => m.id === id);
+    if (idx >= 0) data.meds[idx] = med;
+  } else {
+    data.meds.push(med);
+  }
+  saveData(data);
+  closeModal('medModal');
+  renderHome();
+  renderMedsList();
+}
+function deleteMed() {
+  if (!confirm('确定要删除此药品吗？')) return;
+  const data = loadData();
+  const id = document.getElementById('medEditId').value;
+  data.meds = data.meds.filter(m => m.id !== id);
+  saveData(data);
+  closeModal('medModal');
+  renderHome();
+  renderMedsList();
+}
+
+const pillColors = ['#FFE4E1','#E0F0FF','#E8F5E9','#FFF8E1','#F3E5F5','#E0F7FA','#FCE4EC','#F1F8E9'];
+const pillEmojis = ['💊','💉','🩹','🧴','💧','🌿','🔬','⚕️'];
+function renderMedsList() {
+  const data = loadData();
+  const el = document.getElementById('medsList');
+  if (!data.meds.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">💊</div><div class="empty-text">还没有添加药品</div><button class="empty-btn" onclick="showAddMedModal()">添加药品</button></div>';
+    return;
+  }
+  el.innerHTML = data.meds.map((m, i) => {
+    const remainDays = m.times.length ? Math.floor(m.remain / m.times.length) : m.remain;
+    const cls = remainDays <= 3 ? 'low' : remainDays <= 7 ? 'mid' : 'ok';
+    return `<div class="med-card" onclick="showAddMedModal('${m.id}')">
+      <div class="med-pill" style="background:${pillColors[i % pillColors.length]}">${pillEmojis[i % pillEmojis.length]}</div>
+      <div class="med-info">
+        <div class="med-name">${m.name} <span class="tag tag-blue">${m.spec || ''}</span></div>
+        <div class="med-dosage">每次${m.dose || '-'} · ${m.method} · ${timeLabels(m.times)}</div>
+        ${m.note ? `<div class="med-dosage" style="color:#FA8C16">⚠️ ${m.note}</div>` : ''}
+      </div>
+      <div class="med-remain"><div class="days ${cls}">${remainDays}</div><div class="unit">天用量</div></div>
+    </div>`;
+  }).join('');
+}
+
+const TIME_MAP = { morning: '早晨 7:00', noon: '中午 12:00', evening: '晚上 18:00', night: '睡前 21:00' };
+const TIME_EMOJI = { morning: '🌅', noon: '☀️', evening: '🌆', night: '🌙' };
+function timeLabels(times) { return (times || []).map(t => ({morning:'早',noon:'午',evening:'晚',night:'睡前'}[t])).join('/'); }
+
+// ===== TODAY TIMELINE =====
+function renderTodayTimeline() {
+  const data = loadData();
+  const el = document.getElementById('todayTimeline');
+  const slots = ['morning','noon','evening','night'];
+  const slotMeds = {};
+  slots.forEach(s => slotMeds[s] = []);
+  data.meds.forEach(m => { (m.times||[]).forEach(t => slotMeds[t].push(m)); });
+  const activeSlots = slots.filter(s => slotMeds[s].length);
+  if (!activeSlots.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无用药计划<br>点击右下角 + 添加药品</div></div>';
+    return;
+  }
+  const checkins = data.checkins[today()] || {};
+  el.innerHTML = activeSlots.map(slot => {
+    const meds = slotMeds[slot];
+    const status = checkins[slot]; // 'done' | 'missed' | undefined
+    const btnCls = status === 'done' ? 'done' : status === 'missed' ? 'missed' : '';
+    const btnIcon = status === 'done' ? '✓' : status === 'missed' ? '✗' : '';
+    return `<div class="time-slot">
+      <div class="time-icon ${slot}">${TIME_EMOJI[slot]}</div>
+      <div class="time-detail">
+        <div class="time-label">${TIME_MAP[slot]}</div>
+        <div class="time-meds">${meds.map(m => `${m.name} ${m.dose}`).join('、')} · ${meds[0].method}</div>
+      </div>
+      <div class="time-action"><button class="check-btn ${btnCls}" onclick="toggleCheckin('${slot}')">${btnIcon}</button></div>
+    </div>`;
+  }).join('');
+
+  // Update stats
+  const totalSlots = activeSlots.length;
+  const doneSlots = activeSlots.filter(s => checkins[s] === 'done').length;
+  document.getElementById('statToday').textContent = `${doneSlots}/${totalSlots}`;
+  document.getElementById('statMeds').textContent = data.meds.length;
+}
+
+function toggleCheckin(slot) {
+  const data = loadData();
+  if (!data.checkins[today()]) data.checkins[today()] = {};
+  const cur = data.checkins[today()][slot];
+  if (!cur) {
+    data.checkins[today()][slot] = 'done';
+    // Reduce remain
+    data.meds.forEach(m => {
+      if ((m.times||[]).includes(slot) && m.remain > 0) m.remain--;
+    });
+    addLog(data, `✅ 已服药：${slot === 'morning' ? '早晨' : slot === 'noon' ? '中午' : slot === 'evening' ? '晚上' : '睡前'}用药`);
+  } else if (cur === 'done') {
+    data.checkins[today()][slot] = 'missed';
+    // Restore remain
+    data.meds.forEach(m => {
+      if ((m.times||[]).includes(slot)) m.remain++;
+    });
+  } else {
+    delete data.checkins[today()][slot];
+  }
+  saveData(data);
+  renderTodayTimeline();
+  renderCalendar();
+  renderAdherence();
+}
+
+function addLog(data, text) {
+  data.logs.unshift({ date: new Date().toLocaleString('zh-CN'), text });
+  if (data.logs.length > 100) data.logs.length = 100;
+}
+
+// ===== ADHERENCE =====
+function calcWeeklyAdherence() {
+  const data = loadData();
+  if (!data.meds.length) return 0;
+  const slots = ['morning','noon','evening','night'];
+  const activeSlots = slots.filter(s => data.meds.some(m => (m.times||[]).includes(s)));
+  if (!activeSlots.length) return 0;
+  let total = 0, done = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const checkins = data.checkins[key] || {};
+    activeSlots.forEach(s => { total++; if (checkins[s] === 'done') done++; });
+  }
+  return total ? Math.round(done / total * 100) : 0;
+}
+
+function calcMonthlyAdherence() {
+  const data = loadData();
+  if (!data.meds.length) return 0;
+  const slots = ['morning','noon','evening','night'];
+  const activeSlots = slots.filter(s => data.meds.some(m => (m.times||[]).includes(s)));
+  if (!activeSlots.length) return 0;
+  const now = new Date();
+  let total = 0, done = 0;
+  for (let i = 0; i < now.getDate(); i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), i + 1);
+    const key = d.toISOString().slice(0, 10);
+    const checkins = data.checkins[key] || {};
+    activeSlots.forEach(s => { total++; if (checkins[s] === 'done') done++; });
+  }
+  return total ? Math.round(done / total * 100) : 0;
+}
+
+function renderAdherence() {
+  const weekly = calcWeeklyAdherence();
+  document.getElementById('statAdherence').textContent = weekly + '%';
+  const monthly = calcMonthlyAdherence();
+  const circumference = 2 * Math.PI * 52;
+  document.getElementById('adherenceCircle').style.strokeDashoffset = circumference * (1 - monthly / 100);
+  document.getElementById('adherenceNum').textContent = monthly + '%';
+  const msg = monthly >= 90 ? '🎉 太棒了！继续保持！' : monthly >= 70 ? '💪 还不错，再接再厉！' : monthly >= 50 ? '⚠️ 需要加油，坚持服药很重要' : '❗ 依从率偏低，请注意按时服药';
+  document.getElementById('adherenceMsg').textContent = msg;
+}
+
+// ===== CALENDAR =====
+let calendarDate = new Date();
+function changeMonth(delta) {
+  calendarDate.setMonth(calendarDate.getMonth() + delta);
+  renderCalendar();
+}
+function renderCalendar() {
+  const data = loadData();
+  const year = calendarDate.getFullYear(), month = calendarDate.getMonth();
+  document.getElementById('calendarMonth').textContent = `${year}年${month + 1}月`;
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = today();
+  const nowDate = new Date();
+  const slots = ['morning','noon','evening','night'];
+  const activeSlots = slots.filter(s => data.meds.some(m => (m.times||[]).includes(s)));
+
+  let html = ['日','一','二','三','四','五','六'].map(d => `<div class="day-label">${d}</div>`).join('');
+  for (let i = 0; i < firstDay; i++) html += '<div class="day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const isFuture = new Date(year, month, d) > nowDate;
+    let cls = '';
+    if (isFuture) { cls = 'future'; }
+    else if (activeSlots.length) {
+      const checkins = data.checkins[dateStr] || {};
+      const done = activeSlots.filter(s => checkins[s] === 'done').length;
+      if (done === activeSlots.length) cls = 'full';
+      else if (done > 0) cls = 'partial';
+      else if (dateStr <= todayStr) cls = 'missed';
+    }
+    html += `<div class="day ${cls} ${isToday ? 'today' : ''}">${d}</div>`;
+  }
+  document.getElementById('calendarGrid').innerHTML = html;
+}
+
+// ===== LOGS =====
+function renderLogs() {
+  const data = loadData();
+  const el = document.getElementById('logList');
+  if (!data.logs.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">暂无记录</div></div>';
+    return;
+  }
+  el.innerHTML = data.logs.slice(0, 20).map(l => `<div class="log-item"><div class="log-date">${l.date}</div><div class="log-title">${l.text}</div></div>`).join('');
+}
+
+// ===== FOLLOWUPS =====
+function showFollowupModal() { openModal('followupModal'); }
+function saveFollowup() {
+  const data = loadData();
+  const fu = {
+    id: genId(),
+    dept: document.getElementById('fuDept').value,
+    date: document.getElementById('fuDate').value,
+    note: document.getElementById('fuNote').value
+  };
+  if (!fu.dept || !fu.date) { alert('请填写科室和日期'); return; }
+  data.followups.push(fu);
+  saveData(data);
+  closeModal('followupModal');
+  renderProfile();
+  renderHome();
+}
+function deleteFollowup(id) {
+  const data = loadData();
+  data.followups = data.followups.filter(f => f.id !== id);
+  saveData(data);
+  renderProfile();
+  renderHome();
+}
+function renderFollowups() {
+  const data = loadData();
+  const el = document.getElementById('followupList');
+  document.getElementById('reminderCount').textContent = data.followups.length + '个提醒 ›';
+  if (!data.followups.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🏥</div><div class="empty-text">暂无复诊提醒</div></div>';
+    return;
+  }
+  const sorted = [...data.followups].sort((a, b) => a.date.localeCompare(b.date));
+  el.innerHTML = sorted.map(f => {
+    const daysLeft = Math.ceil((new Date(f.date) - new Date()) / 86400000);
+    const urgent = daysLeft <= 3;
+    return `<div class="reminder-card ${urgent ? 'urgent' : ''}">
+      <div class="r-title">${f.dept} ${urgent ? '<span class="tag tag-red">即将到期</span>' : daysLeft <= 7 ? '<span class="tag tag-orange">本周内</span>' : ''}</div>
+      <div class="r-time">📅 ${f.date}（${daysLeft > 0 ? '还有' + daysLeft + '天' : daysLeft === 0 ? '今天' : '已过期' + Math.abs(daysLeft) + '天'}）</div>
+      ${f.note ? `<div class="r-desc">📝 ${f.note}</div>` : ''}
+      <div style="text-align:right;margin-top:6px"><span style="color:#FF4D4F;font-size:12px;cursor:pointer" onclick="deleteFollowup('${f.id}')">删除</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ===== HOME REMINDERS =====
+function renderRemindersHome() {
+  const data = loadData();
+  const el = document.getElementById('remindersHome');
+  let reminders = [];
+  // Low stock
+  data.meds.forEach(m => {
+    const days = m.times.length ? Math.floor(m.remain / m.times.length) : m.remain;
+    if (days <= 7) {
+      reminders.push({ urgent: days <= 3, title: `💊 ${m.name} 库存不足`, desc: `剩余约${days}天用量，请及时购药或联系医生续方`, time: days <= 3 ? '紧急' : '提醒' });
+    }
+  });
+  // Upcoming followups
+  data.followups.forEach(f => {
+    const daysLeft = Math.ceil((new Date(f.date) - new Date()) / 86400000);
+    if (daysLeft >= 0 && daysLeft <= 7) {
+      reminders.push({ urgent: daysLeft <= 2, title: `🏥 ${f.dept} 复诊提醒`, desc: f.note || '请提前准备就诊资料', time: daysLeft === 0 ? '今天' : `${daysLeft}天后` });
+    }
+  });
+  if (!reminders.length) {
+    el.innerHTML = '<div class="reminder-card"><div class="r-title">✅ 暂无紧急提醒</div><div class="r-desc">一切正常，请继续保持良好的用药习惯</div></div>';
+    return;
+  }
+  el.innerHTML = reminders.map(r => `<div class="reminder-card ${r.urgent ? 'urgent' : ''}"><div class="r-title">${r.title} <span class="tag ${r.urgent ? 'tag-red' : 'tag-orange'}">${r.time}</span></div><div class="r-desc">${r.desc}</div></div>`).join('');
+}
+
+// ===== HEALTH TIPS =====
+const tips = [
+  { title: '服药时间很重要', content: '降压药建议晨起服用，降糖药需根据类型选择饭前或饭后。固定时间服药有助于维持稳定的血药浓度。' },
+  { title: '不要擅自停药', content: '慢性病用药需要长期坚持，即使症状改善也不要自行停药或减量，请遵医嘱调整方案。' },
+  { title: '注意药物相互作用', content: '同时服用多种药物时，注意间隔时间。如有疑问，请咨询医生或药师。' },
+  { title: '定期复查很重要', content: '慢性病患者应定期检查相关指标，及时根据检查结果调整用药方案。' },
+  { title: '正确储存药品', content: '注意药品的储存条件，避免高温、潮湿、光照。过期药品不能继续使用。' },
+  { title: '记录用药感受', content: '如出现不适症状，及时记录并告知医生，有助于调整用药方案。' },
+];
+function renderTips() {
+  const idx = new Date().getDate() % tips.length;
+  const tip = tips[idx];
+  document.getElementById('healthTips').innerHTML = `<div class="tip-card"><div class="tip-title">💡 ${tip.title}</div><div class="tip-content">${tip.content}</div></div>`;
+}
+
+// ===== DRUG INTERACTION =====
+const interactions = {
+  '二甲双胍+格列美脲': '两者联用时需注意低血糖风险，建议监测血糖',
+  '阿司匹林+华法林': '⚠️ 高风险！两者均为抗凝/抗血小板药物，联用增加出血风险',
+  '氨氯地平+辛伐他汀': '联用时辛伐他汀剂量不宜超过20mg/天',
+  '卡托普利+螺内酯': '联用可能导致高钾血症，需监测血钾',
+  '二甲双胍+酒精': '⚠️ 服用二甲双胍期间应避免饮酒，可能引起乳酸酸中毒',
+};
+function showDrugInteraction() {
+  const data = loadData();
+  const el = document.getElementById('interactionResult');
+  if (data.meds.length < 2) {
+    el.innerHTML = '<p style="text-align:center;color:#888">当前药品少于2种，暂无需检测</p>';
+    openModal('interactionModal');
+    return;
+  }
+  let html = '<p style="margin-bottom:12px">当前用药清单：</p>';
+  html += data.meds.map(m => `<span class="tag tag-blue" style="margin:2px">${m.name}</span>`).join(' ');
+  html += '<div style="margin-top:16px;padding-top:12px;border-top:1px solid #e8e8e8">';
+  let found = false;
+  for (let i = 0; i < data.meds.length; i++) {
+    for (let j = i + 1; j < data.meds.length; j++) {
+      const key1 = data.meds[i].name + '+' + data.meds[j].name;
+      const key2 = data.meds[j].name + '+' + data.meds[i].name;
+      const result = interactions[key1] || interactions[key2];
+      if (result) {
+        found = true;
+        html += `<div class="reminder-card urgent" style="margin-top:8px"><div class="r-title">${data.meds[i].name} × ${data.meds[j].name}</div><div class="r-desc">${result}</div></div>`;
+      }
+    }
+  }
+  if (!found) {
+    html += '<p style="text-align:center;color:#52C41A;padding:12px">✅ 未发现常见药物冲突，但建议咨询医生或药师确认</p>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+  openModal('interactionModal');
+}
+
+// ===== EXPORT =====
+function exportData() {
+  const data = loadData();
+  const p = data.profile;
+  let report = `══════════════════════════\n    慢病用药报告\n══════════════════════════\n\n`;
+  report += `📋 个人信息\n姓名：${p.name || '-'}\n年龄：${p.age || '-'}岁\n慢病类型：${(p.diseases||[]).join('、') || '-'}\n过敏药物：${p.allergy || '无'}\n\n`;
+  report += `💊 用药清单 (共${data.meds.length}种)\n${'—'.repeat(20)}\n`;
+  data.meds.forEach((m, i) => {
+    report += `${i+1}. ${m.name} ${m.spec||''}\n   每次${m.dose||'-'} · ${m.method} · ${timeLabels(m.times)}\n   剩余：${m.remain}${m.unit}\n`;
+    if (m.note) report += `   备注：${m.note}\n`;
+    report += '\n';
+  });
+  report += `📊 依从率统计\n本周：${calcWeeklyAdherence()}%\n本月：${calcMonthlyAdherence()}%\n\n`;
+  report += `🏥 复诊提醒\n`;
+  if (data.followups.length) {
+    data.followups.forEach(f => { report += `· ${f.date} ${f.dept}${f.note ? ' (' + f.note + ')' : ''}\n`; });
+  } else { report += '暂无\n'; }
+  report += `\n报告生成时间：${new Date().toLocaleString('zh-CN')}\n`;
+
+  document.getElementById('reportContent').textContent = report;
+  openModal('reportModal');
+}
+
+function showReminderSettings() { switchPage('profile'); }
+
+// ===== CLEAR =====
+function clearAllData() {
+  if (confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+// ===== RENDER ALL =====
+function renderHome() {
+  renderHeader();
+  renderTodayTimeline();
+  renderRemindersHome();
+  renderTips();
+  renderAdherence();
+}
+function renderProfile() {
+  renderFollowups();
+}
+
+// ===== INIT =====
+function init() {
+  renderHome();
+  renderMedsList();
+  renderCalendar();
+  renderAdherence();
+  renderProfile();
+
+  // Demo data if empty
+  const data = loadData();
+  if (!data.meds.length && !data.profile.name) {
+    if (confirm('👋 欢迎使用慢病用药小管家！\n\n是否加载示例数据以体验功能？')) {
+      loadDemoData();
+    }
+  }
+}
+
+function loadDemoData() {
+  const demoData = {
+    profile: { name: '张先生', age: '58', gender: '男', diseases: ['高血压','糖尿病','高血脂'], allergy: '青霉素' },
+    meds: [
+      { id: 'demo1', name: '二甲双胍缓释片', spec: '500mg', dose: '1片', times: ['morning','evening'], remain: 28, unit: '片', method: '饭后服用', note: '服药期间避免饮酒' },
+      { id: 'demo2', name: '氨氯地平片', spec: '5mg', dose: '1片', times: ['morning'], remain: 12, unit: '片', method: '不限', note: '' },
+      { id: 'demo3', name: '阿托伐他汀钙片', spec: '20mg', dose: '1片', times: ['night'], remain: 5, unit: '片', method: '不限', note: '避免与柚子汁同服' },
+      { id: 'demo4', name: '阿司匹林肠溶片', spec: '100mg', dose: '1片', times: ['morning'], remain: 30, unit: '片', method: '饭后服用', note: '' },
+    ],
+    followups: [
+      { id: 'fu1', dept: '内分泌科 · 市第一医院', date: getDateStr(5), note: '带上近3个月的血糖记录本' },
+      { id: 'fu2', dept: '心内科 · 市第一医院', date: getDateStr(15), note: '需要复查血脂四项' },
+    ],
+    logs: [
+      { date: new Date().toLocaleString('zh-CN'), text: '✅ 已服药：早晨用药' },
+      { date: new Date(Date.now() - 86400000).toLocaleString('zh-CN'), text: '✅ 已服药：晚上用药' },
+    ],
+    checkins: {}
+  };
+  // Fill some past checkins
+  for (let i = 1; i <= 7; i++) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    demoData.checkins[key] = {};
+    if (Math.random() > 0.2) demoData.checkins[key].morning = 'done';
+    if (Math.random() > 0.3) demoData.checkins[key].evening = 'done';
+    if (Math.random() > 0.25) demoData.checkins[key].night = 'done';
+  }
+  saveData(demoData);
+  renderHome();
+  renderMedsList();
+  renderCalendar();
+  renderAdherence();
+  renderProfile();
+  renderLogs();
+}
+function getDateStr(daysFromNow) {
+  const d = new Date(); d.setDate(d.getDate() + daysFromNow);
+  return d.toISOString().slice(0, 10);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
